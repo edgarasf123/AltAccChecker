@@ -5,13 +5,15 @@ sql.Query( "CREATE TABLE IF NOT EXISTS altchk_players ( steamid VARCHAR(45) UNIQ
 local api_key = "" -- http://steamcommunity.com/dev/apikey
 
 local function check_user( steamid_cur, steamid_alt )
-	if steamid_cur == steamid_alt then return end
+	if steamid_cur == steamid_alt then return false end
 	
 	local ban_data = ULib.bans[steamid_alt]
 	-- In case original user gets unbanned, second condition will prevent him getting banned again for having alt. account (which is banned)
 	if ban_data and string.sub( ban_data.reason or "", 1, 17 ) ~= "Alternate Account" then
 		ULib.addBan(steamid_cur, 0, "Alternate Account of "..steamid_alt)
+		return true
 	end
+	return false
 end
 
 net.Receive( "altchk_steamids", function( len, ply )
@@ -20,7 +22,7 @@ net.Receive( "altchk_steamids", function( len, ply )
 	local steamids_num = net.ReadUInt(7)
 	for i=1, steamids_num do
 		local tmp_steamid = net.ReadString()
-		check_user( steamid, tmp_steamid )
+		if check_user( steamid, tmp_steamid ) then return end
 	end
 end )
 
@@ -28,13 +30,15 @@ end )
 gameevent.Listen( "player_connect" )
 hook.Add( "player_connect", "altchk_connect", function( data )
 	if not ULib then error("AltChk: ULib not found!") return end
+	
 	local id = data.userid	
 	local ip = data.address
 	local steamid = data.networkid
+	
 	sql.Query( "INSERT OR REPLACE INTO altchk_players (steamid, ip) VALUES ('"..steamid.."', '"..ip.."')" );
 	local steamids = sql.Query( "SELECT * FROM altchk_players WHERE ip='"..ip.."'") or {}
 	for k, row in ipairs(steamids) do
-		check_user( steamid, row.steamid )
+		if check_user( steamid, row.steamid ) then return end
 	end
 	
 	if api_key ~= "" then
@@ -50,8 +54,8 @@ hook.Add( "player_connect", "altchk_connect", function( data )
 					check_user( steamid, util.SteamIDFrom64(lender) )
 				end
 			end,
-			function(code)
-				error("AltChk: Unable to reach SteamAPI server")
+			function(err)
+				error("AltChk: Unable to reach SteamAPI server ("..err..")")
 			end
 		)
 	end
