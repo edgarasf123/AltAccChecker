@@ -1,0 +1,11 @@
+"AddonInfo"
+{
+	"name"				"AltAccChecker"
+	"version"			"1.0.0"
+	"up_date"			"00/00/00"
+	"author_name"			"edgarasf123"
+	"author_email"			""
+	"author_url"			""
+	"info"				"Alternate Account Checker"
+	"override"			"0"
+}
