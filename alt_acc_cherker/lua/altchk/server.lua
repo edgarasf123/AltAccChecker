@@ -9,8 +9,8 @@ local function check_user( steamid_cur, steamid_alt )
 	
 	local ban_data = ULib.bans[steamid_alt]
 	-- In case original user gets unbanned, second condition will prevent him getting banned again for having alt. account (which is banned)
-	if ban_data and string.sub( ban_data.reason or "", 1, 18 ) ~= "Altertnate Account" then
-		ULib.addBan(steamid_cur, 0, "Altertnate Account of "..steamid_alt)
+	if ban_data and string.sub( ban_data.reason or "", 1, 17 ) ~= "Alternate Account" then
+		ULib.addBan(steamid_cur, 0, "Alternate Account of "..steamid_alt)
 	end
 end
 
